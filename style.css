@@ -1,0 +1,336 @@
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f4fff8;
+}
+
+/* ROLE PAGE */
+.container {
+  max-width: 360px;
+  margin: auto;
+  padding: 32px;
+  text-align: center;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  background: #2ecc71;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  font-size: 26px;
+}
+
+.subtitle {
+  color: #6b8f7d;
+}
+
+.roles {
+  margin-top: 20px;
+}
+
+.role-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.role-card:hover {
+  transform: scale(1.02);
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 14px;
+}
+
+.admin { background: #27ae60; }
+.student { background: #2ecc71; }
+.worker { background: #16a085; }
+
+/* ADMIN DASHBOARD */
+.header {
+  background: #16a34a;
+  color: white;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard {
+  max-width: 360px;
+  margin: auto;
+  padding: 16px;
+}
+
+.score-card {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.score-card h1 {
+  font-size: 48px;
+  margin: 10px 0;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: white;
+  width: 30%;
+  padding: 12px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.stat-card i {
+  color: #16a34a;
+}
+
+.chart-card {
+  background: white;
+  padding: 14px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.small {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* STUDENT DASHBOARD */
+
+.welcome-card {
+  background: #5fb85f;
+  color: white;
+  padding: 24px;
+  border-radius: 18px;
+  margin-bottom: 20px;
+}
+
+.score-card.light {
+  background: white;
+  color: #14532d;
+  margin-bottom: 20px;
+}
+
+.report-btn {
+  background: #4fa84f;
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tip-card {
+  background: #f6fff4;
+  border: 1px solid #dcfce7;
+  padding: 16px;
+  border-radius: 16px;
+}
+/* WORKER DASHBOARD */
+
+.status-card {
+  flex: 1;
+  padding: 16px;
+  border-radius: 16px;
+  text-align: center;
+  background: white;
+}
+
+.status-card.pending {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.status-card.progress {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.status-card.resolved {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.section-title {
+  margin: 20px 0 10px;
+  color: #14532d;
+}
+
+.issue-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #dcfce7;
+}
+
+.issue-card h4 {
+  margin: 0 0 6px;
+}
+
+.issue-card p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.issue-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.progress {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge.resolved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.issue-footer select {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #d1fae5;
+}
+
+.reminder-card {
+  background: #f6fff4;
+  border: 1px solid #dcfce7;
+  padding: 16px;
+  border-radius: 16px;
+}
+.report-card {
+  background: #f9fafb;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.status-card {
+  flex: 1;
+  padding: 16px;
+  border-radius: 14px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.status-card.pending {
+  background: #f59e0b;
+}
+
+.status-card.progress {
+  background: #3b82f6;
+}
+
+.status-card.resolved {
+  background: #22c55e;
+}
+.issue-card {
+  background: white;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+}
+
+.issue-card h4 {
+  margin: 0 0 6px;
+}
+
+.issue-card p {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: white;
+}
+
+.badge.pending {
+  background: #f59e0b;
+}
+
+.badge.progress {
+  background: #3b82f6;
+}
+
+.badge.resolved {
+  background: #22c55e;
+}
+.issue-footer select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+}
+.reminder-card {
+  background: #ecfeff;
+  padding: 16px;
+  border-radius: 14px;
+  margin-top: 24px;
+  color: #0f766e;
+}
+

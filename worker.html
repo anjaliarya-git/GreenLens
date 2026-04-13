@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard - GreenLens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%);
+            color: white; padding: 20px 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1600px; margin: 0 auto;
+        }
+        .header h1 {font-size: 24px;}
+        .user-info {display: flex; align-items: center; gap: 20px;}
+        .department-badge {
+            background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; font-weight: bold;
+        }
+        .penalty-badge {
+            background: #f44336; padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; font-weight: bold; animation: pulse 2s infinite;
+        }
+        .penalty-badge.good {background: #4caf50; animation: none;}
+        @keyframes pulse {0%, 100% {opacity: 1;} 50% {opacity: 0.7;}}
+        .logout-btn {
+            background: rgba(255,255,255,0.2); border: 2px solid white; color: white;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; font-size: 14px; font-weight: bold;
+        }
+        .logout-btn:hover {background: white; color: #2e7d32;}
+        .container {max-width: 1600px; margin: 30px auto; padding: 0 20px;}
+        
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;
+        }
+        .stat-card.pending {border-top: 4px solid #ff9800;}
+        .stat-card.progress {border-top: 4px solid #2196f3;}
+        .stat-card.resolved {border-top: 4px solid #4caf50;}
+        .stat-card.penalty {border-top: 4px solid #f44336;}
+        .stat-value {font-size: 48px; font-weight: bold; margin: 10px 0;}
+        .stat-label {font-size: 16px; color: #666;}
+        
+        .section {
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 24px; color: #2e7d32; margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 3px solid #66bb6a;
+        }
+        
+        /* Performance & Penalty Section */
+        .performance-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+            margin-bottom: 30px;
+        }
+        .performance-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f8e9 100%);
+            padding: 25px; border-radius: 12px; border: 2px solid #e0e0e0;
+        }
+        .perf-metric {
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 15px 0; padding: 15px; background: white; border-radius: 8px;
+        }
+        .perf-label {font-size: 14px; color: #666;}
+        .perf-value {font-size: 28px; font-weight: bold; color: #2e7d32;}
+        
+        .penalty-warning {
+            background: #fff3cd; border-left: 4px solid #ffc107;
+            padding: 15px; margin: 20px 0; border-radius: 4px;
+        }
+        .penalty-warning.critical {
+            background: #f8d7da; border-left-color: #dc3545;
+        }
+        .penalty-info {
+            background: #e3f2fd; padding: 15px; border-radius: 8px;
+            margin: 15px 0; border-left: 4px solid #2196f3;
+        }
+        
+        /* Overdue Reports Highlight */
+        .reports-table {width: 100%; border-collapse: collapse; margin-top: 20px;}
+        .reports-table th {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+            color: white; padding: 15px; text-align: left; font-weight: bold;
+        }
+        .reports-table td {padding: 15px; border-bottom: 1px solid #e0e0e0;}
+        .reports-table tr:hover {background: #f1f8e9;}
+        .reports-table tr.overdue {background: #ffebee; animation: highlight 2s infinite;}
+        @keyframes highlight {
+            0%, 100% {background: #ffebee;}
+            50% {background: #ffcdd2;}
+        }
+        .status-select {
+            padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; cursor: pointer; background: white;
+        }
+        .time-remaining {
+            font-size: 12px; font-weight: bold;
+        }
+        .time-good {color: #4caf50;}
+        .time-warning {color: #ff9800;}
+        .time-critical {color: #f44336;}
+        
+        .empty-state {text-align: center; padding: 60px 20px; color: #757575;}
+        .empty-state-icon {font-size: 64px; margin-bottom: 20px; opacity: 0.5;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-wrench"></i> Worker Dashboard</h1>
+            <div class="user-info">
+                <span class="department-badge" id="departmentBadge">Loading...</span>
+                <span class="penalty-badge" id="penaltyBadge">⚠️ 0 Penalties</span>
+                <span id="workerName">Loading...</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card progress">
+                <div class="stat-value" id="progressCount">0</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card resolved">
+                <div class="stat-value" id="resolvedCount">0</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+            <div class="stat-card penalty">
+                <div class="stat-value" id="penaltyPoints">0</div>
+                <div class="stat-label">Penalty Points</div>
+            </div>
+        </div>
+
+        <!-- Performance & Penalty System -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> Performance & Penalty System</h2>
+            
+            <div id="penaltyWarnings"></div>
+            
+            <div class="performance-grid">
+                <div class="performance-card">
+                    <h3 style="color: #2e7d32; margin-bottom: 15px;">📊 Your Performance</h3>
+                    <div class="perf-metric">
+                        <div>
+                            <div class="perf-label">Average Resolution Time</div>
+                            <div style="font-size: 12px; color: #999;">Compared to expected time</div>
+                        </div>
+                        <div class="perf-value" id="avgResolutionTime">--</div>
+                    </div>
+                    <div class="perf-metric">
+                        <div>
+                            <div class="perf-label">On-Time Resolution Rate</div>
+                            <div style="font-size: 12px; color: #999;">Resolved within limit</div>
+                        </div>
+                        <div class="perf-value" id="onTimeRate">0%</div>
+                    </div>
+                    <div class="perf-metric">
+                        <div>
+                            <div class="perf-label">Total Resolved</div>
+                            <div style="font-size: 12px; color: #999;">All time</div>
+                        </div>
+                        <div class="perf-value" id="totalResolved">0</div>
+                    </div>
+                </div>
+                
+                <div class="performance-card">
+                    <h3 style="color: #d32f2f; margin-bottom: 15px;">⚠️ Penalty System</h3>
+                    <div class="penalty-info">
+                        <strong>How Penalties Work:</strong>
+                        <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                            <li>+5 points for each delayed resolution</li>
+                            <li>At 25 points: Additional tasks assigned</li>
+                            <li>At 50 points: Performance review required</li>
+                            <li>At 75 points: Supervisor notification</li>
+                            <li>Good performance reduces penalty points</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px;">
+                        <strong>Current Status:</strong>
+                        <div id="penaltyStatus" style="margin-top: 10px; font-size: 18px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Reports -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Issue Reports</h2>
+            <div id="reportsContainer">
+                <p style="text-align: center; padding: 40px; color: #666;">Loading reports...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzOWPZ5UhoJte2LRNo7YtRQD_-mx7Rb5E",
+            authDomain: "greenlens-6cd3e.firebaseapp.com",
+            projectId: "greenlens-6cd3e",
+            storageBucket: "greenlens-6cd3e.firebasestorage.app",
+            messagingSenderId: "698372050167",
+            appId: "1:698372050167:web:982a02c2a1d94586ff17f2",
+            measurementId: "G-HBSYVFBNJY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentUserData = null;
+        let allReports = [];
+        let penaltyPoints = 0;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserData();
+                setupRealtimeListeners();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        async function loadUserData() {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists()) {
+                currentUserData = userDoc.data();
+                penaltyPoints = currentUserData.penaltyPoints || 0;
+                
+                document.getElementById('workerName').textContent = currentUserData.workerName || 'Worker';
+                document.getElementById('departmentBadge').textContent = currentUserData.department || 'No Department';
+                document.getElementById('penaltyPoints').textContent = penaltyPoints;
+                
+                updatePenaltyBadge();
+                updatePenaltyStatus();
+            }
+        }
+
+        function updatePenaltyBadge() {
+            const badge = document.getElementById('penaltyBadge');
+            if (penaltyPoints === 0) {
+                badge.textContent = '✅ No Penalties';
+                badge.className = 'penalty-badge good';
+            } else if (penaltyPoints < 25) {
+                badge.textContent = `⚠️ ${penaltyPoints} Penalty Points`;
+                badge.className = 'penalty-badge';
+            } else {
+                badge.textContent = `🚨 ${penaltyPoints} Points - Action Required!`;
+                badge.className = 'penalty-badge';
+            }
+        }
+
+        function updatePenaltyStatus() {
+            const statusDiv = document.getElementById('penaltyStatus');
+            const warningsDiv = document.getElementById('penaltyWarnings');
+            
+            if (penaltyPoints === 0) {
+                statusDiv.innerHTML = '<span style="color: #4caf50;">✅ Excellent! No penalties.</span>';
+                warningsDiv.innerHTML = '';
+            } else if (penaltyPoints < 25) {
+                statusDiv.innerHTML = `<span style="color: #ff9800;">⚠️ ${penaltyPoints} points - Keep improving!</span>`;
+                warningsDiv.innerHTML = '';
+            } else if (penaltyPoints < 50) {
+                statusDiv.innerHTML = '<span style="color: #f44336;">🚨 Additional tasks assigned!</span>';
+                warningsDiv.innerHTML = `
+                    <div class="penalty-warning">
+                        <strong>⚠️ Action Required:</strong> You have accumulated ${penaltyPoints} penalty points. 
+                        Additional sustainability tasks have been assigned to improve performance.
+                    </div>
+                `;
+            } else if (penaltyPoints < 75) {
+                statusDiv.innerHTML = '<span style="color: #f44336;">🚨 Performance review required!</span>';
+                warningsDiv.innerHTML = `
+                    <div class="penalty-warning critical">
+                        <strong>🚨 Performance Review Required:</strong> You have ${penaltyPoints} penalty points. 
+                        Please schedule a meeting with your supervisor immediately.
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = '<span style="color: #f44336;">🚨 Supervisor notified!</span>';
+                warningsDiv.innerHTML = `
+                    <div class="penalty-warning critical">
+                        <strong>🚨 Critical: Supervisor Notified!</strong> You have ${penaltyPoints} penalty points. 
+                        Immediate action and supervisor intervention required.
+                    </div>
+                `;
+            }
+        }
+
+        function setupRealtimeListeners() {
+            onSnapshot(collection(db, 'reports'), (snapshot) => {
+                allReports = [];
+                snapshot.forEach((doc) => {
+                    allReports.push({ id: doc.id, ...doc.data() });
+                });
+
+                const myReports = allReports.filter(r => r.department === currentUserData.department);
+                updateStats(myReports);
+                displayReports(myReports);
+                calculatePerformance(myReports);
+            });
+        }
+
+        function updateStats(reports) {
+            const pending = reports.filter(r => r.status === 'Pending').length;
+            const progress = reports.filter(r => r.status === 'In Progress').length;
+            const resolved = reports.filter(r => r.status === 'Resolved').length;
+
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('progressCount').textContent = progress;
+            document.getElementById('resolvedCount').textContent = resolved;
+        }
+
+        function calculatePerformance(reports) {
+            const resolved = reports.filter(r => r.status === 'Resolved' && r.createdAt && r.resolvedAt);
+            
+            document.getElementById('totalResolved').textContent = resolved.length;
+            
+            if (resolved.length === 0) {
+                document.getElementById('avgResolutionTime').textContent = '--';
+                document.getElementById('onTimeRate').textContent = '0%';
+                return;
+            }
+            
+            let totalTime = 0;
+            let onTimeCount = 0;
+            
+            resolved.forEach(report => {
+                const resolutionTime = (report.resolvedAt.toMillis() - report.createdAt.toMillis()) / 60000;
+                const expectedTime = report.expectedResponseTime || 720;
+                
+                totalTime += resolutionTime;
+                if (resolutionTime <= expectedTime) onTimeCount++;
+            });
+            
+            const avgTime = (totalTime / resolved.length).toFixed(0);
+            document.getElementById('avgResolutionTime').textContent = avgTime + ' min';
+            
+            const onTimeRate = ((onTimeCount / resolved.length) * 100).toFixed(0);
+            document.getElementById('onTimeRate').textContent = onTimeRate + '%';
+        }
+
+        function displayReports(reports) {
+            const container = document.getElementById('reportsContainer');
+            
+            if (reports.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
+                        <h3>No Reports</h3>
+                        <p>No issues in your department yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const now = Date.now();
+            
+            container.innerHTML = `
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Issue Type</th>
+                            <th>Location</th>
+                            <th>Expected Time</th>
+                            <th>Time Remaining</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reports.map(report => {
+                            const elapsed = report.createdAt ? 
+                                (now - report.createdAt.toMillis()) / 60000 : 0;
+                            const expected = report.expectedResponseTime || 720;
+                            const remaining = expected - elapsed;
+                            
+                            const isOverdue = remaining < 0 && report.status !== 'Resolved';
+                            const timeClass = remaining < 0 ? 'time-critical' : 
+                                            remaining < expected * 0.25 ? 'time-warning' : 'time-good';
+                            
+                            const timeDisplay = remaining < 0 ? 
+                                `OVERDUE by ${Math.abs(remaining).toFixed(0)} min!` :
+                                `${remaining.toFixed(0)} min left`;
+                            
+                            return `
+                                <tr class="${isOverdue ? 'overdue' : ''}">
+                                    <td>${report.createdAt ? new Date(report.createdAt.toMillis()).toLocaleDateString() : 'N/A'}</td>
+                                    <td><strong>${report.issueType || 'N/A'}</strong></td>
+                                    <td>${report.location || 'N/A'}</td>
+                                    <td>${expected} min</td>
+                                    <td class="${timeClass}">${report.status === 'Resolved' ? '✅ Done' : timeDisplay}</td>
+                                    <td>
+                                        <select class="status-select" onchange="updateStatus('${report.id}', this.value)">
+                                            <option value="Pending" ${report.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                            <option value="In Progress" ${report.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                            <option value="Resolved" ${report.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button onclick="updateStatus('${report.id}', document.querySelector('[onchange*=\\'${report.id}\\']').value)" 
+                                                style="padding: 8px 16px; background: #66bb6a; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                            Save
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        window.updateStatus = async function(reportId, newStatus) {
+            try {
+                const report = allReports.find(r => r.id === reportId);
+                if (!report) return;
+                
+                const updateData = {
+                    status: newStatus,
+                    updatedAt: serverTimestamp()
+                };
+
+                if (newStatus === 'Resolved') {
+                    updateData.resolvedAt = serverTimestamp();
+                    
+                    // Check if overdue and add penalty
+                    const now = Date.now();
+                    const elapsed = (now - report.createdAt.toMillis()) / 60000;
+                    const expected = report.expectedResponseTime || 720;
+                    
+                    if (elapsed > expected) {
+                        penaltyPoints += 5;
+                        await updateDoc(doc(db, 'users', currentUser.uid), {
+                            penaltyPoints: penaltyPoints
+                        });
+                        
+                        alert(`⚠️ Report resolved but was overdue by ${(elapsed - expected).toFixed(0)} minutes.\n+5 penalty points added.\nTotal penalty points: ${penaltyPoints}`);
+                        
+                        updatePenaltyBadge();
+                        updatePenaltyStatus();
+                    } else {
+                        alert('✅ Status updated! Report resolved on time.');
+                    }
+                }
+
+                await updateDoc(doc(db, 'reports', reportId), updateData);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update status');
+            }
+        };
+
+        window.logout = async function() {
+            await signOut(auth);
+            window.location.href = 'index.html';
+        };
+    </script>
+</body>
+</html>
